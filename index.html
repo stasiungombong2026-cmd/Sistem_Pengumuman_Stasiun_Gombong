@@ -600,71 +600,165 @@
     <script src="app.js" defer></script>
     <script>
 /* =========================================================
-   PATCH MENU NAVIGASI - AUDIO ANNOUNCEMENT STASIUN GOMBONG
-   Tidak menggantikan app.js
+   PATCH NAVIGASI + RENDER DATA
+   Audio Announcement Stasiun Gombong
    ========================================================= */
-
 (function () {
-    function activateTab(tabName) {
-        const panels = document.querySelectorAll('.tab-panel');
-        const tabs = document.querySelectorAll('.nav-tab');
 
-        // Sembunyikan semua panel
-        panels.forEach(panel => {
-            panel.classList.add('hidden');
-        });
+    /* Simpan switchNavTab asli dari app.js */
+    const originalSwitchNavTab = window.switchNavTab;
 
-        // Nonaktifkan semua tombol menu
-        tabs.forEach(tab => {
-            tab.classList.remove('active');
-            tab.classList.remove('bg-amber-500');
-            tab.classList.remove('text-slate-950');
-            tab.classList.add('bg-[#141e3d]');
-            tab.classList.add('text-slate-300');
-        });
-
-        // Tampilkan panel yang dipilih
-        const panel = document.getElementById('panel-' + tabName);
-        if (panel) {
-            panel.classList.remove('hidden');
-        }
-
-        // Aktifkan tombol menu
-        const tab = document.getElementById('nav-' + tabName);
-        if (tab) {
-            tab.classList.add('active');
-            tab.classList.remove('bg-[#141e3d]');
-            tab.classList.remove('text-slate-300');
-            tab.classList.add('bg-amber-500');
-            tab.classList.add('text-slate-950');
-        }
-
-        // Simpan menu terakhir
-        try {
-            localStorage.setItem('gombong_active_tab', tabName);
-        } catch (e) {}
-    }
-
-    // Fungsi global karena index.html menggunakan onclick=""
     window.switchNavTab = function (tabName) {
-        activateTab(tabName);
+
+        /* Jalankan fungsi asli app.js terlebih dahulu */
+        try {
+            if (typeof originalSwitchNavTab === 'function') {
+                originalSwitchNavTab(tabName);
+            }
+        } catch (e) {
+            console.error('switchNavTab app.js error:', e);
+        }
+
+        /* Pengaman perpindahan panel */
+        const tabs = [
+            'generator',
+            'darurat',
+            'daftarkereta',
+            'teksbaku',
+            'chimenarrator',
+            'daftarnarrator'
+        ];
+
+        tabs.forEach(function (t) {
+            const panel = document.getElementById('panel-' + t);
+            const nav = document.getElementById('nav-' + t);
+
+            if (panel) {
+                panel.classList.toggle('hidden', t !== tabName);
+            }
+
+            if (nav) {
+                nav.classList.remove(
+                    'bg-amber-500',
+                    'text-slate-950',
+                    'font-semibold'
+                );
+
+                nav.classList.add(
+                    'bg-[#141e3d]',
+                    'text-slate-300',
+                    'font-medium'
+                );
+            }
+        });
+
+        const activeNav = document.getElementById('nav-' + tabName);
+
+        if (activeNav) {
+            activeNav.classList.remove(
+                'bg-[#141e3d]',
+                'text-slate-300',
+                'font-medium'
+            );
+
+            activeNav.classList.add(
+                'bg-amber-500',
+                'text-slate-950',
+                'font-semibold'
+            );
+        }
+
+        /* ==========================================
+           RENDER DATA SESUAI MENU
+           ========================================== */
+
+        try {
+
+            if (tabName === 'daftarkereta') {
+                if (typeof window.renderTrainTable === 'function') {
+                    window.renderTrainTable();
+                }
+            }
+
+            if (tabName === 'teksbaku') {
+                if (typeof window.renderTeksBakuTable === 'function') {
+                    window.renderTeksBakuTable();
+                }
+            }
+
+            if (tabName === 'chimenarrator') {
+                if (typeof window.renderChimeList === 'function') {
+                    window.renderChimeList();
+                }
+
+                if (typeof window.refreshChimeSelects === 'function') {
+                    window.refreshChimeSelects();
+                }
+            }
+
+            if (tabName === 'daftarnarrator') {
+                if (typeof window.renderNarratorList === 'function') {
+                    window.renderNarratorList();
+                }
+            }
+
+            if (tabName === 'darurat') {
+                if (typeof window.renderEmergencyList === 'function') {
+                    window.renderEmergencyList();
+                }
+            }
+
+            if (tabName === 'generator') {
+
+                if (typeof window.updateGeneratorTrainSelect === 'function') {
+                    window.updateGeneratorTrainSelect();
+                }
+
+                if (typeof window.updateGeneratorTeksBakuSelect === 'function') {
+                    window.updateGeneratorTeksBakuSelect();
+                }
+            }
+
+        } catch (e) {
+            console.error('Render menu error:', e);
+        }
+
+        /* Simpan menu terakhir */
+        try {
+            localStorage.setItem(
+                'gombong_active_tab',
+                tabName
+            );
+        } catch (e) {}
     };
 
-    // Jalankan setelah seluruh halaman selesai dimuat
+    /* ==========================================
+       MENU AWAL
+       ========================================== */
     window.addEventListener('load', function () {
+
         setTimeout(function () {
+
             let tab = 'generator';
 
             try {
-                const saved = localStorage.getItem('gombong_active_tab');
-                if (saved && document.getElementById('panel-' + saved)) {
+                const saved =
+                    localStorage.getItem('gombong_active_tab');
+
+                if (
+                    saved &&
+                    document.getElementById('panel-' + saved)
+                ) {
                     tab = saved;
                 }
             } catch (e) {}
 
-            activateTab(tab);
-        }, 50);
+            window.switchNavTab(tab);
+
+        }, 100);
+
     });
+
 })();
 </script>
 </body>
