@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stasiun Gombong - Sistem Audio Announcement & Pelafalan Waktu Otomatis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darknavy: {
+                            900: '#0b1329',
+                            950: '#070b19',
+                            800: '#141e3d',
+                            700: '#1e2d5c'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- Header Section -->
+    <header class="bg-[#0b1329] border-b border-[#1e2d5c] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex flex-col sm:flex-row items-center justify-between py-2 sm:py-0 gap-3">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3 w-full sm:w-auto">
+                <div class="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 text-slate-950 font-bold">
+                    <i class="fa-solid fa-train text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                        STASIUN GOMBONG
+                    </h1>
+                    <p class="text-[11px] text-slate-400 font-medium">Sistem Audio Announcement & Pelafalan Waktu Otomatis</p>
+                </div>
+            </div>
+            
+            <!-- Top Right Action Buttons -->
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                <button type="button" id="btn-download-backup" class="bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-200 text-xs font-medium px-3.5 py-2 rounded-lg border border-[#1e2d5c] transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-download text-amber-400"></i> Unduh Cadangan Data
+                </button>
+                <button type="button" id="btn-load-data" onclick="triggerLoadData()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-semibold px-3.5 py-2 rounded-lg transition flex items-center gap-2 shadow-md shadow-amber-500/20">
+                    <i class="fa-solid fa-upload"></i> Muat Data
+                </button>
+                <input type="file" id="file-input-backup" accept=".json" class="hidden" onchange="handleFileImport(event)">
+                <span id="data-status" class="hidden sm:inline text-[10px] text-slate-500"></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs Bar -->
+    <nav class="bg-[#0b1329] border-b border-[#1e2d5c] shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto scrollbar-none">
+            <div class="flex items-center space-x-2 py-3 min-w-max">
+                <button onclick="switchNavTab('generator')" id="nav-generator" class="nav-tab px-4 py-2 rounded-lg text-xs font-semibold bg-amber-500 text-slate-950 shadow transition flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn"></i> Generator Kereta
+                </button>
+                <button onclick="switchNavTab('darurat')" id="nav-darurat" class="nav-tab px-4 py-2 rounded-lg text-xs font-medium bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 border border-[#1e2d5c] transition flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Informasi & Darurat
+                </button>
+                <button onclick="switchNavTab('daftarkereta')" id="nav-daftarkereta" class="nav-tab px-4 py-2 rounded-lg text-xs font-medium bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 border border-[#1e2d5c] transition flex items-center gap-2">
+                    <i class="fa-solid fa-train-subway"></i> Daftar Kereta & Stasiun
+                </button>
+                <button onclick="switchNavTab('teksbaku')" id="nav-teksbaku" class="nav-tab px-4 py-2 rounded-lg text-xs font-medium bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 border border-[#1e2d5c] transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-lines"></i> Teks Baku
+                </button>
+                <button onclick="switchNavTab('chimenarrator')" id="nav-chimenarrator" class="nav-tab px-4 py-2 rounded-lg text-xs font-medium bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 border border-[#1e2d5c] transition flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i> Manajemen Chime & Narator
+                </button>
+                <button onclick="switchNavTab('daftarnarrator')" id="nav-daftarnarrator" class="nav-tab px-4 py-2 rounded-lg text-xs font-medium bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 border border-[#1e2d5c] transition flex items-center gap-2">
+                    <i class="fa-solid fa-microphone"></i> Daftar Narator
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Grid -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left Column: Dynamic Panels (Span 2) -->
+        <div class="lg:col-span-2 space-y-5">
+            
+            <!-- PANEL 1: GENERATOR KERETA -->
+            <div id="panel-generator" class="tab-panel bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="flex items-center space-x-2 border-b border-[#1e2d5c] pb-3">
+                    <i class="fa-solid fa-sliders text-amber-500 text-sm"></i>
+                    <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Parameter Pengumuman Kereta</h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Jenis Pengumuman</label>
+                        <select id="sel-jenis" disabled class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                            <option value="kedatangan">Kedatangan Kereta</option>
+                            <option value="pemberangkatan">Pemberangkatan Kereta</option>
+                            <option value="melintas">Kereta Melintas Langsung</option>
+                            <option value="keterlambatan">Informasi Keterlambatan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Cari & Pilih Kereta (Nama / Nomor KA)</label>
+                        <div class="relative mb-2">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                            <input id="search-kereta" type="search" autocomplete="off"
+                                   placeholder="Ketik nomor atau nama kereta, mis. 1009A / Sawunggalih"
+                                   oninput="filterGeneratorTrainSelect()"
+                                   class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl pl-9 pr-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                        </div>
+                        <select id="sel-kereta" onchange="onTrainSelectionChange()" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                            <!-- Pencarian nomor/nama KA tersedia pada field di atas -->
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Jalur & Arah Penempatan</label>
+                        <select id="sel-jalur" onchange="onParameterChange()" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                            <option value="Jalur 1 Dari Arah Barat">Jalur 1 Dari Arah Barat</option>
+                            <option value="Jalur 1 Dari Arah Timur">Jalur 1 Dari Arah Timur</option>
+                            <option value="Jalur 2 Dari Arah Barat">Jalur 2 Dari Arah Barat</option>
+                            <option value="Jalur 2 Dari Arah Timur" selected>Jalur 2 Dari Arah Timur</option>
+                            <option value="Jalur 3 Dari Arah Barat">Jalur 3 Dari Arah Barat</option>
+                            <option value="Jalur 3 Dari Arah Timur">Jalur 3 Dari Arah Timur</option>
+                            <option value="Jalur 4 Dari Arah Barat">Jalur 4 Dari Arah Barat</option>
+                            <option value="Jalur 4 Dari Arah Timur">Jalur 4 Dari Arah Timur</option>
+                            <option value="Jalur 5 Dari Arah Barat">Jalur 5 Dari Arah Barat</option>
+                            <option value="Jalur 5 Dari Arah Timur">Jalur 5 Dari Arah Timur</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1.5">Pilih Karakter Narator Google</label>
+                        <div class="text-[10px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 mb-2">Versi ini kembali ke mesin SpeechSynthesis browser seperti v34. Tersedia 10 preset karakter suara berbasis Google Voice yang tersedia di perangkat. Nama/voice Google yang benar-benar tersedia dapat berbeda menurut Android, Chrome, dan paket bahasa yang terpasang. File MP3 contoh terlampir juga tersedia sebagai preview rekaman.</div>
+                        <select id="sel-narrator" onchange="selectNarratorProfile(this.value)" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition"></select>
+                        <div id="narrator-profile-info" class="mt-2 text-[10px] text-slate-400 bg-[#070b19] border border-[#1e2d5c] rounded-lg px-3 py-2"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bell text-amber-400"></i> Chime Pembuka
+                        </label>
+                        <select id="sel-chime-in" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                            <option value="nada_a">Nada A (Klasik KAI)</option>
+                            <option value="nada_b">Nada B (Melodi Tinggi)</option>
+                            <option value="nada_c">Nada C (Gong Stasiun)</option>
+                            <option value="tanpa_chime">Tanpa Chime Pembuka</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1.5 flex items-center gap-1.5">
+                            <i class="fa-solid fa-bell-slash text-amber-400"></i> Chime Penutup
+                        </label>
+                        <select id="sel-chime-out" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                            <option value="nada_b" selected>Nada B (Melodi Tinggi)</option>
+                            <option value="nada_a">Nada A (Klasik KAI)</option>
+                            <option value="nada_c">Nada C (Gong Stasiun)</option>
+                            <option value="tanpa_chime">Tanpa Chime Penutup</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Pilih Teks Baku</label>
+                    <select id="sel-teksbaku" onchange="onTeksBakuSelect(this.value)" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-3 text-xs text-slate-200 focus:outline-none focus:border-amber-500 transition">
+                        <!-- Dynamically populated -->
+                    </select>
+                </div>
+                <div class="flex flex-wrap gap-2 -mt-2">
+                    <button onclick="openTrainModal(-1)" class="text-[10px] bg-[#141e3d] border border-[#1e2d5c] text-amber-400 px-3 py-2 rounded-lg"><i class="fa-solid fa-plus"></i> Tambah Kereta</button>
+                    <button onclick="openTeksModal(-1)" class="text-[10px] bg-[#141e3d] border border-[#1e2d5c] text-amber-400 px-3 py-2 rounded-lg"><i class="fa-solid fa-plus"></i> Tambah Teks Baku</button>
+                    <button onclick="switchNavTab('daftarkereta')" class="text-[10px] bg-[#141e3d] border border-[#1e2d5c] text-slate-300 px-3 py-2 rounded-lg"><i class="fa-solid fa-pen"></i> Kelola Kereta</button>
+                    <button onclick="switchNavTab('teksbaku')" class="text-[10px] bg-[#141e3d] border border-[#1e2d5c] text-slate-300 px-3 py-2 rounded-lg"><i class="fa-solid fa-pen"></i> Kelola Teks</button>
+                </div>
+
+                <div>
+                    <!-- Tombol Pilihan Cepat Variabel Modal -->
+<div>
+    <label class="block text-xs font-medium text-slate-400 mb-1">Klik Variabel untuk Menyisipkan:</label>
+    <div class="flex flex-wrap gap-1.5 mb-3">
+        <button type="button" onclick="insertGeneratorVariable('{no_ka}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{no_ka}</button>
+        <button type="button" onclick="insertGeneratorVariable('{nama_ka}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{nama_ka}</button>
+        <button type="button" onclick="insertGeneratorVariable('{jalur}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{jalur}</button>
+        <button type="button" onclick="insertGeneratorVariable('{dari_arah}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{dari_arah}</button>
+        <button type="button" onclick="insertGeneratorVariable('{tujuan}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{tujuan}</button>
+        <button type="button" onclick="insertGeneratorVariable('{sf_rangkaian}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{sf_rangkaian}</button>
+        <!-- Tambahkan baris di bawah ini -->
+        <button type="button" onclick="insertGeneratorVariable('{st_perhentian}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{st_perhentian}</button>
+    </div>
+</div>
+
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Skrip Teks Pengumuman</label>
+                    <textarea id="script-textarea" rows="4" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3.5 text-slate-200 text-xs font-mono-code focus:outline-none focus:border-amber-500 transition resize-none"></textarea>
+                    <div class="grid grid-cols-1 gap-2 mt-2">
+                        <div class="bg-[#0b1329] border border-[#1e2d5c] rounded-xl p-3"><div class="text-[10px] text-amber-400 mb-1">INDONESIA</div><div id="preview-id" class="text-[11px] text-slate-300"></div></div>
+                        <div class="bg-[#0b1329] border border-[#1e2d5c] rounded-xl p-3"><div class="text-[10px] text-amber-400 mb-1">ENGLISH</div><div id="preview-en" class="text-[11px] text-slate-300"></div></div>
+                        
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button onclick="startBroadcast()" class="flex-grow bg-[#10b981] hover:bg-[#059669] active:bg-[#047857] text-slate-950 font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2.5 text-sm">
+                        <i class="fa-solid fa-play text-slate-950"></i> Putar Pengumuman
+                    </button>
+                    <button onclick="stopBroadcast()" class="bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-rose-600/20 transition flex items-center justify-center text-sm" title="Berhentikan Audio">
+                        <i class="fa-solid fa-stop"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL 2: INFORMASI & DARURAT -->
+            <div id="panel-darurat" class="tab-panel hidden bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl space-y-5">
+                <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                    <div class="flex items-center space-x-2"><i class="fa-solid fa-triangle-exclamation text-rose-500 text-sm"></i><h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Informasi & Pengumuman Darurat</h2></div>
+                    <button onclick="openEmergencyModal(-1)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs px-3.5 py-2 rounded-lg"><i class="fa-solid fa-plus"></i> Tambah</button>
+                </div>
+                <div id="emergency-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1.5">Skrip Darurat Terpilih</label>
+                    <div class="grid grid-cols-1 gap-3">
+  <div><div class="text-[10px] text-amber-400 mb-1">INDONESIA</div><textarea id="emergency-textarea" rows="3" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3.5 text-slate-200 text-xs font-mono-code resize-none"></textarea></div>
+  <div><div class="text-[10px] text-amber-400 mb-1">ENGLISH</div><textarea id="emergency-textarea-en" rows="3" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3.5 text-slate-200 text-xs font-mono-code resize-none"></textarea></div>
+  
+</div>
+                </div>
+                <button onclick="playEmergencyBroadcast()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3.5 px-6 rounded-xl"><i class="fa-solid fa-bullhorn"></i> Siarkan Darurat Sekarang</button>
+            </div>
+
+            <!-- PANEL 3: DAFTAR KERETA & STASIUN -->
+            <div id="panel-daftarkereta" class="tab-panel hidden bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-train-subway text-amber-500 text-sm"></i>
+                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Daftar Kereta & Jadwal Stasiun Gombong</h2>
+                    </div>
+                    <button onclick="openTrainModal(null)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-plus"></i> Tambah Kereta
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-[#070b19] text-slate-400 uppercase font-medium border-b border-[#1e2d5c]">
+                            <tr>
+                                <th class="p-3 w-16">No. KA</th>
+                                <th class="p-3 w-28">Nama Kereta</th>
+                                <th class="p-3">Tujuan Akhir</th>
+                                <th class="p-3">Jalur & Arah</th>
+                                <th class="p-3">SF Rangkaian</th>
+                                <th class="p-3">Stasiun Perhentian</th>
+                                <th class="p-3 text-center w-20">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="train-table-body" class="divide-y divide-[#1e2d5c]">
+                            <!-- Dynamically injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PANEL 4: TEKS BAKU -->
+            <div id="panel-teksbaku" class="tab-panel hidden bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-file-lines text-amber-500 text-sm"></i>
+                        <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Manajemen Teks Baku (Template)</h2>
+                    </div>
+                    <button onclick="openTeksModal(null)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs px-3.5 py-2 rounded-lg transition flex items-center gap-1.5 shadow-md">
+                        <i class="fa-solid fa-plus"></i> Tambah Teks Baku
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-[#070b19] text-slate-400 uppercase font-medium border-b border-[#1e2d5c]">
+                            <tr>
+                                <th class="p-3 w-32">Kategori Jenis</th>
+                                <th class="p-3 w-40">Judul Template</th>
+                                <th class="p-3 w-36">Chime (Buka / Tutup)</th>
+                                <th class="p-3">Isi Teks Baku</th>
+                                <th class="p-3 text-center w-24">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teksbaku-table-body" class="divide-y divide-[#1e2d5c]">
+                            <!-- Dynamically injected rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- PANEL 5: MANAJEMEN CHIME & NARRATOR -->
+            <div id="panel-chimenarrator" class="tab-panel hidden bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                    <div class="flex items-center space-x-2"><i class="fa-solid fa-sliders text-amber-500 text-sm"></i><h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Manajemen Chime</h2></div>
+                    <button onclick="openChimeModal(-1)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs px-3.5 py-2 rounded-lg"><i class="fa-solid fa-plus"></i> Tambah Chime</button>
+                </div>
+                <div id="chime-list" class="space-y-3"></div>
+            </div>
+
+            <!-- PANEL 6: DAFTAR NARRATOR -->
+            <div id="panel-daftarnarrator" class="tab-panel hidden bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl space-y-4">
+                <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                    <div class="flex items-center space-x-2"><i class="fa-solid fa-microphone text-amber-500 text-sm"></i><h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Daftar Narator / Suara Baku Sistem</h2></div>
+                    <button onclick="openNarratorModal(-1)" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs px-3.5 py-2 rounded-lg"><i class="fa-solid fa-plus"></i> Tambah Narator</button>
+                </div>
+                <div class="bg-amber-500/10 border border-amber-500/20 text-amber-200 text-[11px] rounded-xl p-3">
+                    Suara yang di-upload disimpan sebagai rekaman lokal dan diprioritaskan saat pemutaran. File rekaman tidak dapat diubah menjadi suara TTS dinamis hanya dengan HTML/browser; untuk teks dinamis, siapkan rekaman per bahasa atau gunakan TTS perangkat sebagai cadangan.
+                </div>
+                <div id="narrator-list" class="space-y-3"></div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Status & Player -->
+        <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-6">
+            <div>
+                <div class="flex items-center space-x-2 border-b border-[#1e2d5c] pb-3 mb-6">
+                    <i class="fa-solid fa-tower-broadcast text-amber-500 text-sm"></i>
+                    <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Status & Player</h2>
+                </div>
+
+                <div class="bg-[#070b19] border border-[#1e2d5c] rounded-xl p-6 flex flex-col items-center justify-center min-h-[320px] relative">
+                    <!-- Audio Waveform Bars -->
+                    <div id="audio-waves" class="flex items-end justify-center space-x-1.5 h-16 mb-6">
+                        <div class="w-1.5 bg-slate-700 rounded-full h-3 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-7 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-4 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-10 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-12 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-8 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-5 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-9 transition-all duration-150"></div>
+                        <div class="w-1.5 bg-slate-700 rounded-full h-4 transition-all duration-150"></div>
+                    </div>
+
+                    <!-- Status Label -->
+                    <div id="player-status-label" class="text-xs font-bold tracking-widest text-slate-400 uppercase">
+                        SIAP DIPUTAR
+                    </div>
+
+                    <!-- Live Indicator Subtext -->
+                    <div id="player-subtext" class="text-[11px] text-slate-500 mt-2 font-mono-code text-center">
+                        Sistem PA Stasiun Gombong aktif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Volume & Audio Settings Mini Panel -->
+            <div class="bg-[#070b19] border border-[#1e2d5c] rounded-xl p-4 space-y-3">
+                <div class="flex justify-between text-xs text-slate-400">
+                    <span>Volume Output Speaker</span>
+                    <span id="vol-display" class="font-mono-code text-amber-400 font-bold">100%</span>
+                </div>
+                <input type="range" min="0" max="100" value="100" oninput="updateMasterVolume(this.value)" class="w-full accent-amber-500 bg-[#141e3d] h-2 rounded-lg cursor-pointer">
+                <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-[#1e2d5c]">
+                    <span>Lokasi: Daop 5 Purwokerto</span>
+                    <span class="text-emerald-400 font-mono-code font-semibold">● ONLINE</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal Form for Tambah / Edit Teks Baku -->
+    <div id="teks-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                <h3 id="modal-title" class="text-sm font-bold text-white uppercase tracking-wide">Tambah Teks Baku Baru</h3>
+                <button type="button" onclick="closeTeksModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <input type="hidden" id="edit-index" value="-1">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Kategori Jenis</label>
+                    <select id="modal-kategori" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="kedatangan kereta">Kedatangan - Kereta</option>
+                        <option value="kedatangan penumpang">Kedatangan - Penumpang</option>
+                        <option value="keberangkatan kereta">Keberangkatan - Kereta</option>
+                        <option value="kereta melintas langsung">Keberangkatan - Kereta Melintas Langsung</option>
+                        <option value="ketersediaan kereta">Ketersediaan Kereta</option>
+                        <option value="kelambatan kereta">Kelambatan Kereta</option>
+                        <option value="pembatalan perjalanan kereta">Pembatalan Perjalanan Kereta</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Judul Template</label>
+                    <input type="text" id="modal-judul" placeholder="misal: Kedatangan Standar" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Chime Buka</label>
+                        <select id="modal-chime-in" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="nada_a">nada_a</option>
+                            <option value="nada_b">nada_b</option>
+                            <option value="nada_c">nada_c</option>
+                            <option value="tanpa_chime">tanpa_chime</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Chime Tutup</label>
+                        <select id="modal-chime-out" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="nada_b">nada_b</option>
+                            <option value="nada_a">nada_a</option>
+                            <option value="nada_c">nada_c</option>
+                            <option value="tanpa_chime">tanpa_chime</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Tombol Pilihan Cepat Variabel Modal -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Klik Variabel untuk Menyisipkan:</label>
+                    <div class="flex flex-wrap gap-1.5 mb-3">
+                        <button type="button" onclick="insertVariable('{no_ka}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{no_ka}</button>
+                        <button type="button" onclick="insertVariable('{nama_ka}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{nama_ka}</button>
+                        <button type="button" onclick="insertVariable('{jalur}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{jalur}</button>
+                        <button type="button" onclick="insertVariable('{dari_arah}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{dari_arah}</button>
+                        <button type="button" onclick="insertVariable('{tujuan}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{tujuan}</button>
+                        <button type="button" onclick="insertVariable('{sf_rangkaian}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{sf_rangkaian}</button>
+
+                        <button type="button" onclick="insertVariable('{st_perhentian}')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1 rounded-md transition">{st_perhentian}</button>                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1"><label class="block text-xs font-medium text-slate-400">Bahasa Indonesia</label><button type="button" onclick="autoTranslateTemplate()" class="text-[10px] text-amber-400 hover:underline">Terjemahkan English</button></div>
+                    <textarea id="modal-isi" rows="3" placeholder="Gunakan variabel {no_ka} {nama_ka} {jalur} {dari_arah} {tujuan} {sta_perhentian} {sf_rangkaian}" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3 text-xs text-slate-200 font-mono-code resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">English</label>
+                    <textarea id="modal-isi-en" rows="3" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3 text-xs text-slate-200 font-mono-code resize-none"></textarea>
+                </div>
+                
+            </div>
+            <div class="flex items-center justify-end space-x-3 pt-2">
+                <button type="button" onclick="closeTeksModal()" class="bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Batal</button>
+                <button type="button" onclick="saveTeksBaku()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-5 py-2 rounded-xl text-xs font-bold">Simpan Template</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Form for Tambah / Edit Kereta -->
+    <div id="train-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3">
+                <h3 id="train-modal-title" class="text-sm font-bold text-white uppercase tracking-wide">Tambah Kereta Baru</h3>
+                <button type="button" onclick="closeTrainModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <input type="hidden" id="train-edit-index" value="-1">
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Nomor Kereta</label>
+                        <input type="text" id="train-modal-no" placeholder="misal: 142A" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Nama Kereta</label>
+                        <input type="text" id="train-modal-name" placeholder="misal: Sawunggalih" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Tujuan Akhir</label>
+                    <input type="text" id="train-modal-route" placeholder="misal: Pasar Senen" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                </div>
+                
+                <!-- Jalur dan Arah Kedatangan -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Jalur / Melintas Langsung</label>
+                        <select id="train-modal-jalur" class="w-full h-[38px] bg-[#1b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Jalur 1">Jalur 1</option>
+                            <option value="Jalur 2">Jalur 2</option>
+                            <option value="Jalur 3">Jalur 3</option>
+                            <option value="Jalur 4">Jalur 4</option>
+                            <option value="Jalur 5">Jalur 5</option>
+                            <option value="Langsung Jalur 2">Langsung Jalur 2</option>
+                            <option value="Langsung Jalur 3">Langsung Jalur 3</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-400 mb-1">Arah Kedatangan</label>
+                        <select id="train-modal-arah" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                            <option value="Dari Arah Timur" selected>Dari Arah Timur</option>
+                            <option value="Dari Arah Barat">Dari Arah Barat</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Bagian Susunan Rangkaian (Chips Pilihan Cepat & Reset) -->
+                <div class="space-y-2 pt-1">
+                    <label class="block text-xs font-medium text-amber-400">Susunan Rangkaian:</label>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="addSfComponent('Premium')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Premium</button>
+                        <button type="button" onclick="addSfComponent('Bisnis')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Bisnis</button>
+                        <button type="button" onclick="addSfComponent('Ekonomi')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Ekonomi</button>
+                        <button type="button" onclick="addSfComponent('Eksekutif')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Eksekutif</button>
+                        <button type="button" onclick="addSfComponent('Priority')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Priority</button>
+                        <button type="button" onclick="addSfComponent('Kereta Makan')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Kereta Makan</button>
+                        <button type="button" onclick="addSfComponent('Pembangkit')" class="bg-[#141e3d] hover:bg-[#1e2d5c] border border-[#1e2d5c] text-slate-200 text-[11px] px-2.5 py-1.5 rounded-lg transition">+ Pembangkit</button>
+                    </div>
+                    <input type="text" id="train-modal-sf" placeholder="Premium 1, Premium 2, Kereta Makan, Eksekutif 1" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 font-mono-code focus:outline-none focus:border-amber-500">
+                    <button type="button" onclick="resetSfComponent()" class="text-[11px] text-amber-400 hover:underline inline-block pt-1">Reset Rangkaian</button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-400 mb-1">Stasiun Perhentian (Pisahkan dengan koma)</label>
+                    <input type="text" id="train-modal-stops" placeholder="Kutoarjo, Kutowinangun, Gombong, Kroya, Purwokerto" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+                </div>
+            </div>
+            <div class="flex items-center justify-end space-x-3 pt-2">
+                <button type="button" onclick="closeTrainModal()" class="bg-[#141e3d] hover:bg-[#1e2d5c] text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Batal</button>
+                <button type="button" onclick="saveTrainData()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-5 py-2 rounded-xl text-xs font-bold">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal Narator -->
+    <div id="narrator-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+      <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3"><h3 id="narrator-modal-title" class="text-sm font-bold text-white uppercase">Tambah Narator</h3><button type="button" onclick="closeNarratorModal()"><i class="fa-solid fa-xmark"></i></button></div>
+        <input type="hidden" id="narrator-edit-index" value="-1">
+        <input id="narrator-name" placeholder="Nama narator" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <input id="narrator-desc" placeholder="Keterangan" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <div class="space-y-2">
+          <label class="text-xs text-slate-400">Rekaman Bahasa Indonesia (MP3/WAV/M4A/OGG)</label><input id="narrator-audio-id" type="file" accept="audio/*" class="w-full text-xs text-slate-300">
+          <label class="text-xs text-slate-400">Rekaman English</label><input id="narrator-audio-en" type="file" accept="audio/*" class="w-full text-xs text-slate-300">
+          
+        </div>
+        <p class="text-[10px] text-slate-500">Rekaman disimpan di penyimpanan audio browser (IndexedDB), terpisah dari data teks.</p>
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeNarratorModal()" class="bg-[#141e3d] px-4 py-2 rounded-xl text-xs">Batal</button><button type="button" onclick="saveNarrator()" class="bg-amber-500 text-slate-950 px-5 py-2 rounded-xl text-xs font-bold">Simpan</button></div>
+      </div>
+    </div>
+
+    <!-- Modal Emergency -->
+    <div id="emergency-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+      <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3"><h3 id="emergency-modal-title" class="text-sm font-bold text-white uppercase">Tambah Pengumuman</h3><button type="button" onclick="closeEmergencyModal()"><i class="fa-solid fa-xmark"></i></button></div>
+        <input type="hidden" id="emergency-edit-index" value="-1">
+        <input id="emergency-title" placeholder="Judul" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <input id="emergency-desc" placeholder="Keterangan" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <textarea id="emergency-script" rows="3" placeholder="Teks Indonesia" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3 text-xs text-white"></textarea>
+        <textarea id="emergency-script-en" rows="3" placeholder="Teks English" class="w-full bg-[#070b19] border border-[#1e2d5c] rounded-xl p-3 text-xs text-white"></textarea>
+        <button type="button" onclick="autoTranslateEmergency()" class="text-[11px] text-amber-400 hover:underline text-left">Terjemahkan English otomatis</button>
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeEmergencyModal()" class="bg-[#141e3d] px-4 py-2 rounded-xl text-xs">Batal</button><button type="button" onclick="saveEmergency()" class="bg-amber-500 text-slate-950 px-5 py-2 rounded-xl text-xs font-bold">Simpan</button></div>
+      </div>
+    </div>
+
+    <!-- Modal Chime -->
+    <div id="chime-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+      <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-6 w-full max-w-lg shadow-2xl space-y-4">
+        <div class="flex items-center justify-between border-b border-[#1e2d5c] pb-3"><h3 id="chime-modal-title" class="text-sm font-bold text-white uppercase">Tambah Chime</h3><button type="button" onclick="closeChimeModal()"><i class="fa-solid fa-xmark"></i></button></div>
+        <input type="hidden" id="chime-edit-index" value="-1">
+        <input id="chime-id" placeholder="ID, contoh: nada_d" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <input id="chime-name" placeholder="Nama chime" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <input id="chime-desc" placeholder="Keterangan" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2.5 text-xs text-white">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">File Chime (MP3/WAV/M4A/OGG, maks. 8 MB)</label>
+          <input id="chime-audio" type="file" accept="audio/*" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2 text-xs text-slate-300">
+          <p class="text-[10px] text-slate-500 mt-1">Jika file lebih panjang, tentukan bagian yang dipakai.</p>
+          <div class="grid grid-cols-2 gap-2 mt-2">
+            <input id="chime-start" type="number" min="0" step="0.1" placeholder="Mulai (detik)" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2 text-xs text-white">
+            <input id="chime-end" type="number" min="0" step="0.1" placeholder="Selesai (detik)" class="w-full bg-[#0b1329] border border-[#1e2d5c] rounded-xl px-3 py-2 text-xs text-white">
+          </div>
+          <p id="chime-trim-info" class="text-[10px] text-amber-400 mt-1"></p>
+        </div>
+        <div class="flex justify-end gap-2"><button type="button" onclick="closeChimeModal()" class="bg-[#141e3d] px-4 py-2 rounded-xl text-xs">Batal</button><button type="button" onclick="saveChime()" class="bg-amber-500 text-slate-950 px-5 py-2 rounded-xl text-xs font-bold">Simpan</button></div>
+      </div>
+    </div>
+
+    <!-- PROFIL KARAKTER NARATOR -->
+    <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-6">
+        <div class="bg-[#101935] border border-[#1e2d5c] rounded-2xl p-5 shadow-xl">
+            <div class="flex items-center gap-2 mb-3"><i class="fa-solid fa-microphone-lines text-amber-400"></i><h2 class="text-sm font-bold text-slate-200 uppercase tracking-wide">Karakter Suara Narator Sistem</h2></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                <div class="bg-[#0b1329] border border-sky-500/20 rounded-xl p-3"><b class="text-sky-300">♂ Pria — Calm & Solid</b><p class="text-slate-400 mt-1">Deep, warm, authoritative · wibawa 90% · kehangatan 75% · artikulasi 95% · low-mid · 0.95x.</p></div>
+                <div class="bg-[#0b1329] border border-pink-500/20 rounded-xl p-3"><b class="text-pink-300">♀ Wanita — Sleek & Gracious</b><p class="text-slate-400 mt-1">Clear, intelligent, welcoming · wibawa 75% · kehangatan 95% · artikulasi 95% · mid-smooth high · 1.0x.</p></div>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-3">Catatan: preset di atas mengatur karakter rate/pitch pada SpeechSynthesis. Keunikan suara tetap bergantung pada voice Google yang tersedia di perangkat.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#0b1329] border-t border-[#1e2d5c] py-5 text-center text-xs text-slate-500">
+        <p>Stasiun Kereta Api Gombong (GBG) &bull; Sistem Audio Announcement & Pelafalan Waktu Otomatis &copy; 2026</p>
+    </footer>
+
+    <!-- JavaScript Interactive Logic -->
+    <script src="app.js" defer></script>
+</body>
+</html>
